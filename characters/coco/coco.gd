@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 
-const SPEED = 50
+const SPEED = 100
 
 
 @onready var animation_tree: AnimationTree = $AnimationTree
@@ -22,8 +22,8 @@ func _unhandled_input(_event: InputEvent) -> void:
 			input_vector = Vector2.ZERO
 			return
 
-	var x_axis: float = Input.get_axis("ui_left", "ui_right")
-	var y_axis: float = Input.get_axis("ui_up", "ui_down")
+	var x_axis: float = Input.get_axis("move_left", "move_right")
+	var y_axis: float = Input.get_axis("move_up", "move_down")
 	if x_axis:
 		input_vector = x_axis * Vector2.RIGHT
 	elif y_axis:

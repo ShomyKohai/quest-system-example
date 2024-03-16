@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3 uid="uid://cd1lmsy0ije4c"]
+
+[ext_resource type="Script" path="res://gui/GUI.gd" id="1_6pcfw"]
+
+[node name="GUI" type="CanvasLayer"]
+script = ExtResource("1_6pcfw")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CurrentQuest" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Current Quest: %s"
+
+[node name="Progress" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2

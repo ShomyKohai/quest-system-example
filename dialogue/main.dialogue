@@ -2,26 +2,38 @@
 
 Nathan: Hi Coco.
 if apple_status == "has":
-	Coco: I have an apple.
+	Coco: I have 5 apples.
 	- Give to Nathan
-		set apple_status = "gave"
 		Coco: Here you go.
 		Nathan: Thanks.
+		
+		# Here we manually set the quest objective_complete check
+		do QuestSystem.call_quest_method(1, "_update_objective", [])
+		do complete_quest("get_apple")
 	- Keep it
-		Coco: But it's mine.
+		Coco: But they're mine.
 		Nathan: Fair enough.
 elif apple_status == "gave":
-	Nathan: Thanks again for the apple.
+	Nathan: Thanks again for the apples.
 else:
-	Nathan: I sure wish I had an apple. Apparently there's an apple tree around here somewhere.
-
+	if is_quest_active("get_apple"):
+		Nathan: How many apples have you found?
+		Coco: {{apple_count}}!
+	else:
+		Nathan: I sure wish I had an apple. Apparently there's an apple tree around here somewhere.
+		Help Nathan?
+		- Yes
+			do start_quest("get_apple")
+		- No
+			=> END
 => END
 
 
 ~ pick_apple
 
 Coco: It's an apple tree.
-Coco: I'll just take one.
-set apple_status = "has"
+if is_quest_active("get_apple") and apple_count < 5:
+	Coco: I'll just take one.
+	do QuestSystem.call_quest_method(1, "update", [])
 
 => END

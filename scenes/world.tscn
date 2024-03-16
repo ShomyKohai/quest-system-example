@@ -1,5 +1,6 @@
-[gd_scene load_steps=14 format=3 uid="uid://b1au01m7lrbfp"]
+[gd_scene load_steps=15 format=3 uid="uid://b1au01m7lrbfp"]
 
+[ext_resource type="PackedScene" uid="uid://cd1lmsy0ije4c" path="res://gui/gui.tscn" id="1_0mk23"]
 [ext_resource type="Texture2D" uid="uid://bxngxqv2vonco" path="res://world/tiles.png" id="1_gv7bj"]
 [ext_resource type="PackedScene" uid="uid://c4373iviuy8gy" path="res://helpers/camera.tscn" id="1_wd0fv"]
 [ext_resource type="PackedScene" uid="uid://dovx8ojro1870" path="res://characters/coco/coco.tscn" id="2_pnuuh"]
@@ -41,7 +42,10 @@ radius = 14.0
 [node name="World" type="Node2D"]
 y_sort_enabled = true
 
+[node name="GUI" parent="." instance=ExtResource("1_0mk23")]
+
 [node name="Camera" parent="." node_paths=PackedStringArray("target") instance=ExtResource("1_wd0fv")]
+zoom = Vector2(4, 4)
 target = NodePath("../Coco")
 
 [node name="TileMap" type="TileMap" parent="."]

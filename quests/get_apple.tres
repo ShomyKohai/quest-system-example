@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="GetAppleQuest" load_steps=2 format=3 uid="uid://cjv1tqikg3rfk"]
+
+[ext_resource type="Script" path="res://quests/get_apple_quest.gd" id="1_jf8pk"]
+
+[resource]
+script = ExtResource("1_jf8pk")
+id = 1
+quest_name = "Get Apple"
+quest_description = "Nathan'd like to have an apple. Help him to find one."
+quest_objective = "Give Nathan an apple."
