@@ -1,19 +1,17 @@
 ~ start
 
 Nathan: Hi Coco.
-if apple_status == "has":
+if apple_status == APPLE_STATUS.HAS:
 	Coco: I have 5 apples.
 	- Give to Nathan
 		Coco: Here you go.
 		Nathan: Thanks.
-		
-		# Here we manually set the quest objective_complete check
-		do QuestSystem.call_quest_method(1, "_update_objective", [])
+
 		do complete_quest("get_apple")
 	- Keep it
 		Coco: But they're mine.
 		Nathan: Fair enough.
-elif apple_status == "gave":
+elif apple_status == APPLE_STATUS.GAVE:
 	Nathan: Thanks again for the apples.
 else:
 	if is_quest_active("get_apple"):
