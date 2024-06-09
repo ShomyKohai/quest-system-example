@@ -17,7 +17,7 @@ var dialogue_cache: DialogueCache
 
 
 func _enter_tree() -> void:
-	add_autoload_singleton("DialogueManager", "dialogue_manager.gd")
+	add_autoload_singleton("DialogueManager", get_plugin_path() + "/dialogue_manager.gd")
 
 	if Engine.is_editor_hint():
 		Engine.set_meta("DialogueManagerPlugin", self)
@@ -45,6 +45,19 @@ func _enter_tree() -> void:
 		get_editor_interface().get_file_system_dock().file_removed.connect(_on_file_removed)
 
 		add_tool_menu_item("Create copy of dialogue example balloon...", _copy_dialogue_balloon)
+
+		# Prevent the project from showing as unsaved even though it was only just opened
+		if Engine.get_physics_frames() == 0:
+			var timer: Timer = Timer.new()
+			var suppress_unsaved_marker: Callable
+			suppress_unsaved_marker = func():
+				if Engine.get_frames_per_second() >= 10:
+					timer.stop()
+					get_editor_interface().save_all_scenes()
+					timer.queue_free()
+			timer.timeout.connect(suppress_unsaved_marker)
+			add_child(timer)
+			timer.start(0.1)
 
 
 func _exit_tree() -> void:
@@ -82,7 +95,7 @@ func _get_plugin_name() -> String:
 
 
 func _get_plugin_icon() -> Texture2D:
-	return load(get_script().resource_path.get_base_dir() + "/assets/icon.svg")
+	return load(get_plugin_path() + "/assets/icon.svg")
 
 
 func _handles(object) -> bool:
@@ -130,6 +143,80 @@ func _build() -> bool:
 			return false
 
 	return true
+
+
+## Get the shortcuts used by the plugin
+func get_editor_shortcuts() -> Dictionary:
+	var shortcuts: Dictionary = {
+		toggle_comment = [
+			_create_event("Ctrl+K"),
+			_create_event("Ctrl+Slash")
+		],
+		move_up = [
+			_create_event("Alt+Up")
+		],
+		move_down = [
+			_create_event("Alt+Down")
+		],
+		save = [
+			_create_event("Ctrl+Alt+S")
+		],
+		close_file = [
+			_create_event("Ctrl+W")
+		],
+		find_in_files = [
+			_create_event("Ctrl+Shift+F")
+		],
+
+		run_test_scene = [
+			_create_event("Ctrl+F5")
+		],
+		text_size_increase = [
+			_create_event("Ctrl+Equal")
+		],
+		text_size_decrease = [
+			_create_event("Ctrl+Minus")
+		],
+		text_size_reset = [
+			_create_event("Ctrl+0")
+		]
+	}
+
+	var paths = get_editor_interface().get_editor_paths()
+	var settings = load(paths.get_config_dir() + "/editor_settings-4.tres")
+
+	if not settings: return shortcuts
+
+	for s in settings.get("shortcuts"):
+		for key in shortcuts:
+			if s.name == "script_text_editor/%s" % key or s.name == "script_editor/%s" % key:
+				shortcuts[key] = []
+				for event in s.shortcuts:
+					if event is InputEventKey:
+						shortcuts[key].append(event)
+
+	return shortcuts
+
+
+func _create_event(string: String) -> InputEventKey:
+	var event: InputEventKey = InputEventKey.new()
+	var bits = string.split("+")
+	event.keycode = OS.find_keycode_from_string(bits[bits.size() - 1])
+	event.shift_pressed = bits.has("Shift")
+	event.alt_pressed = bits.has("Alt")
+	if bits.has("Ctrl") or bits.has("Command"):
+		event.command_or_control_autoremap = true
+	return event
+
+
+## Get the editor shortcut that matches an event
+func get_editor_shortcut(event: InputEventKey) -> String:
+	var shortcuts: Dictionary = get_editor_shortcuts()
+	for key in shortcuts:
+		for shortcut in shortcuts.get(key, []):
+			if event.is_match(shortcut):
+				return key
+	return ""
 
 
 ## Get the current version
@@ -215,28 +302,33 @@ func _copy_dialogue_balloon() -> void:
 	directory_dialog.dir_selected.connect(func(path):
 		var plugin_path: String = get_plugin_path()
 
-		var file: FileAccess = FileAccess.open(plugin_path + "/example_balloon/example_balloon.tscn", FileAccess.READ)
-		var file_contents: String = file.get_as_text().replace(plugin_path + "/example_balloon/example_balloon.gd", path + "/balloon.gd")
-		file = FileAccess.open(path + "/balloon.tscn", FileAccess.WRITE)
+		var is_dotnet: bool = DialogueSettings.has_dotnet_solution()
+		var balloon_path: String = path + ("/Balloon.tscn" if is_dotnet else "/balloon.tscn")
+		var balloon_script_path: String = path + ("/DialogueBalloon.cs" if is_dotnet else "/balloon.gd")
+
+		# Copy the balloon scene file and change the script reference
+		var is_small_window: bool = ProjectSettings.get_setting("display/window/size/viewport_width") < 400
+		var example_balloon_file_name: String = "small_example_balloon.tscn" if is_small_window else "example_balloon.tscn"
+		var example_balloon_script_file_name: String = "ExampleBalloon.cs" if is_dotnet else "example_balloon.gd"
+		var file: FileAccess = FileAccess.open(plugin_path + "/example_balloon/" + example_balloon_file_name, FileAccess.READ)
+		var file_contents: String = file.get_as_text().replace(plugin_path + "/example_balloon/example_balloon.gd", balloon_script_path)
+		file = FileAccess.open(balloon_path, FileAccess.WRITE)
 		file.store_string(file_contents)
 		file.close()
 
-		file = FileAccess.open(plugin_path + "/example_balloon/small_example_balloon.tscn", FileAccess.READ)
-		file_contents = file.get_as_text().replace(plugin_path + "/example_balloon/example_balloon.gd", path + "/balloon.gd")
-		file = FileAccess.open(path + "/small_balloon.tscn", FileAccess.WRITE)
-		file.store_string(file_contents)
-		file.close()
-
-		file = FileAccess.open(plugin_path + "/example_balloon/example_balloon.gd", FileAccess.READ)
+		# Copy the script file
+		file = FileAccess.open(plugin_path + "/example_balloon/" + example_balloon_script_file_name, FileAccess.READ)
 		file_contents = file.get_as_text()
-		file = FileAccess.open(path + "/balloon.gd", FileAccess.WRITE)
+		if is_dotnet:
+			file_contents = file_contents.replace("class ExampleBalloon", "class DialogueBalloon")
+		file = FileAccess.open(balloon_script_path, FileAccess.WRITE)
 		file.store_string(file_contents)
 		file.close()
 
 		get_editor_interface().get_resource_filesystem().scan()
-		get_editor_interface().get_file_system_dock().call_deferred("navigate_to_path", path + "/balloon.tscn")
+		get_editor_interface().get_file_system_dock().call_deferred("navigate_to_path", balloon_path)
 
-		DialogueSettings.set_setting("balloon_path", path + "/balloon.tscn")
+		DialogueSettings.set_setting("balloon_path", balloon_path)
 
 		directory_dialog.queue_free()
 	)

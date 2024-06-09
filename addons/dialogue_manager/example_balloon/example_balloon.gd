@@ -1,7 +1,12 @@
 extends CanvasLayer
 
+## The action to use for advancing the dialogue
+@export var next_action: StringName = &"ui_accept"
 
-@onready var balloon: Panel = %Balloon
+## The action to use to skip typing the dialogue
+@export var skip_action: StringName = &"ui_cancel"
+
+@onready var balloon: Control = %Balloon
 @onready var character_label: RichTextLabel = %CharacterLabel
 @onready var dialogue_label: DialogueLabel = %DialogueLabel
 @onready var responses_menu: DialogueResponsesMenu = %ResponsesMenu
@@ -22,6 +27,8 @@ var will_hide_balloon: bool = false
 var dialogue_line: DialogueLine:
 	set(next_dialogue_line):
 		is_waiting_for_input = false
+		balloon.focus_mode = Control.FOCUS_ALL
+		balloon.grab_focus()
 
 		# The dialogue has finished so close the balloon
 		if not next_dialogue_line:
@@ -72,10 +79,23 @@ func _ready() -> void:
 	balloon.hide()
 	Engine.get_singleton("DialogueManager").mutated.connect(_on_mutated)
 
+	# If the responses menu doesn't have a next action set, use this one
+	if responses_menu.next_action.is_empty():
+		responses_menu.next_action = next_action
+
 
 func _unhandled_input(_event: InputEvent) -> void:
 	# Only the balloon is allowed to handle input while it's showing
 	get_viewport().set_input_as_handled()
+
+
+func _notification(what: int) -> void:
+	# Detect a change of locale and update the current dialogue line to show the new language
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		var visible_ratio = dialogue_label.visible_ratio
+		self.dialogue_line = await resource.get_next_dialogue_line(dialogue_line.id)
+		if visible_ratio < 1:
+			dialogue_label.skip_typing()
 
 
 ## Start some dialogue
@@ -91,7 +111,7 @@ func next(next_id: String) -> void:
 	self.dialogue_line = await resource.get_next_dialogue_line(next_id, temporary_game_states)
 
 
-### Signals
+#region Signals
 
 
 func _on_mutated(_mutation: Dictionary) -> void:
@@ -105,11 +125,14 @@ func _on_mutated(_mutation: Dictionary) -> void:
 
 
 func _on_balloon_gui_input(event: InputEvent) -> void:
-	# If the user clicks on the balloon while it's typing then skip typing
-	if dialogue_label.is_typing and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.is_pressed():
-		get_viewport().set_input_as_handled()
-		dialogue_label.skip_typing()
-		return
+	# See if we need to skip typing of the dialogue
+	if dialogue_label.is_typing:
+		var mouse_was_clicked: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.is_pressed()
+		var skip_button_was_pressed: bool = event.is_action_pressed(skip_action)
+		if mouse_was_clicked or skip_button_was_pressed:
+			get_viewport().set_input_as_handled()
+			dialogue_label.skip_typing()
+			return
 
 	if not is_waiting_for_input: return
 	if dialogue_line.responses.size() > 0: return
@@ -117,11 +140,14 @@ func _on_balloon_gui_input(event: InputEvent) -> void:
 	# When there are no response options the balloon itself is the clickable thing
 	get_viewport().set_input_as_handled()
 
-	if event is InputEventMouseButton and event.is_pressed() and event.button_index == 1:
+	if event is InputEventMouseButton and event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT:
 		next(dialogue_line.next_id)
-	elif event.is_action_pressed("ui_accept") and get_viewport().gui_get_focus_owner() == balloon:
+	elif event.is_action_pressed(next_action) and get_viewport().gui_get_focus_owner() == balloon:
 		next(dialogue_line.next_id)
 
 
 func _on_responses_menu_response_selected(response: DialogueResponse) -> void:
 	next(response.next_id)
+
+
+#endregion

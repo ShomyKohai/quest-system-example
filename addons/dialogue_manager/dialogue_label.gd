@@ -1,6 +1,7 @@
 @icon("./assets/icon.svg")
 
 @tool
+
 ## A RichTextLabel specifically for use with [b]Dialogue Manager[/b] dialogue.
 class_name DialogueLabel extends RichTextLabel
 
@@ -18,7 +19,7 @@ signal skipped_typing()
 signal finished_typing()
 
 
-## The action to press to skip typing.
+# The action to press to skip typing.
 @export var skip_action: StringName = &"ui_cancel"
 
 ## The speed with which the text types out.
@@ -51,15 +52,17 @@ var dialogue_line:
 ## Whether the label is currently typing itself out.
 var is_typing: bool = false:
 	set(value):
-		if is_typing != value and value == false:
-			finished_typing.emit()
+		var is_finished: bool = is_typing != value and value == false
 		is_typing = value
+		if is_finished:
+			finished_typing.emit()
 	get:
 		return is_typing
 
 var _last_wait_index: int = -1
 var _last_mutation_index: int = -1
 var _waiting_seconds: float = 0
+var _is_awaiting_mutation: bool = false
 
 
 func _process(delta: float) -> void:
@@ -79,6 +82,9 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Note: this will no longer be reached if using Dialogue Manager > 2.32.2. To make skip handling
+	# simpler (so all of mouse/keyboard/joypad are together) it is now the responsibility of the
+	# dialogue balloon.
 	if self.is_typing and visible_ratio < 1 and InputMap.has_action(skip_action) and event.is_action_pressed(skip_action):
 		get_viewport().set_input_as_handled()
 		skip_typing()
@@ -116,12 +122,15 @@ func skip_typing() -> void:
 
 # Type out the next character(s)
 func _type_next(delta: float, seconds_needed: float) -> void:
+	if _is_awaiting_mutation: return
+
 	if visible_characters == get_total_character_count():
 		return
 
 	if _last_mutation_index != visible_characters:
 		_last_mutation_index = visible_characters
 		_mutate_inline_mutations(visible_characters)
+		if _is_awaiting_mutation: return
 
 	var additional_waiting_seconds: float = _get_pause(visible_characters)
 
@@ -174,8 +183,10 @@ func _mutate_inline_mutations(index: int) -> void:
 		if inline_mutation[0] > index:
 			return
 		if inline_mutation[0] == index:
+			_is_awaiting_mutation = true
 			# The DialogueManager can't be referenced directly here so we need to get it by its path
-			Engine.get_singleton("DialogueManager").mutate(inline_mutation[1], dialogue_line.extra_game_states, true)
+			await Engine.get_singleton("DialogueManager").mutate(inline_mutation[1], dialogue_line.extra_game_states, true)
+			_is_awaiting_mutation = false
 
 
 # Determine if the current autopause character at the cursor should qualify to pause typing.
@@ -183,6 +194,10 @@ func _should_auto_pause() -> bool:
 	if visible_characters == 0: return false
 
 	var parsed_text: String = get_parsed_text()
+
+	# Avoid outofbounds when the label auto-translates and the text changes to one shorter while typing out
+	# Note: visible characters can be larger than parsed_text after a translation event
+	if visible_characters >= parsed_text.length(): return false
 
 	# Ignore pause characters if they are next to a non-pause character
 	if parsed_text[visible_characters] in skip_pause_at_character_if_followed_by.split():

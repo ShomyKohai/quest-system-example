@@ -23,6 +23,9 @@ msgstr ""
 msgid "save_all_files"
 msgstr ""
 
+msgid "find_in_files"
+msgstr ""
+
 msgid "test_dialogue"
 msgstr ""
 
@@ -36,6 +39,9 @@ msgid "translations"
 msgstr ""
 
 msgid "settings"
+msgstr ""
+
+msgid "sponsor"
 msgstr ""
 
 msgid "show_support"
@@ -194,7 +200,31 @@ msgstr ""
 msgid "settings.external_editor_warning"
 msgstr ""
 
+msgid "settings.include_characters_in_translations"
+msgstr ""
+
+msgid "settings.include_notes_in_translations"
+msgstr ""
+
+msgid "settings.check_for_updates"
+msgstr ""
+
 msgid "n_of_n"
+msgstr ""
+
+msgid "search.find"
+msgstr ""
+
+msgid "search.find_all"
+msgstr ""
+
+msgid "search.placeholder"
+msgstr ""
+
+msgid "search.replace_placeholder"
+msgstr ""
+
+msgid "search.replace_selected"
 msgstr ""
 
 msgid "search.previous"
@@ -398,15 +428,6 @@ msgstr ""
 msgid "runtime.invalid_expression"
 msgstr ""
 
-msgid "runtime.unsupported_array_method"
-msgstr ""
-
-msgid "runtime.unsupported_dictionary_method"
-msgstr ""
-
-msgid "runtime.unsupported_quaternion_method"
-msgstr ""
-
 msgid "runtime.array_index_out_of_bounds"
 msgstr ""
 
@@ -438,4 +459,13 @@ msgid "runtime.unknown_autoload"
 msgstr ""
 
 msgid "runtime.something_went_wrong"
+msgstr ""
+
+msgid "runtime.expected_n_got_n_args"
+msgstr ""
+
+msgid "runtime.unsupported_array_type"
+msgstr ""
+
+msgid "runtime.dialogue_balloon_missing_start_method"
 msgstr ""

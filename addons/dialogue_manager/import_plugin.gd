@@ -8,7 +8,7 @@ signal compiled_resource(resource: Resource)
 const DialogueResource = preload("./dialogue_resource.gd")
 const DialogueManagerParseResult = preload("./components/parse_result.gd")
 
-const compiler_version = 11
+const compiler_version = 12
 
 
 func _get_importer_name() -> String:
@@ -96,6 +96,7 @@ func _import(source_file: String, save_path: String, options: Dictionary, platfo
 	resource.first_title = data.first_title
 	resource.character_names = data.character_names
 	resource.lines = data.lines
+	resource.raw_text = data.raw_text
 
 	# Clear errors and possibly trigger any cascade recompiles
 	cache.add_file(source_file, data)
