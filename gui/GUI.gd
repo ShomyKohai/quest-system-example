@@ -21,8 +21,7 @@ func set_current_quest(quest: Quest) -> void:
 	%CurrentQuest.show()
 	%Progress.show()
 
-func finish_quest(_quest: Quest) -> void:
-	print("A")
+func finish_quest(quest: Quest) -> void:
 	%CurrentQuest.hide()
 	%Progress.hide()
 
