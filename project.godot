@@ -10,7 +10,8 @@ config_version=5
 
 [application]
 
-config/name="Beginners Dialogue Project"
+config/name="Quest System Example"
+config/description="An example project to learn how to use QuestSystem in pair with Nathan's Dialogue Manager."
 run/main_scene="res://scenes/world.tscn"
 config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://icon.svg"
