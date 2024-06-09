@@ -15,10 +15,24 @@ var completed: CompletedQuestPool = CompletedQuestPool.new("Completed")
 
 
 func _init() -> void:
+	# Ovverride default pools if specified in project settings.
+	if available.get_script().resource_path != QuestSystemSettings.get_config_setting("available_quest_pool_path", available.get_script().resource_path):
+		var pool := load(QuestSystemSettings.get_config_setting("available_quest_pool_path"))
+		available = pool.new("Available")
+	if active.get_script().resource_path != QuestSystemSettings.get_config_setting("active_quest_pool_path", active.get_script().resource_path):
+		var pool := load(QuestSystemSettings.get_config_setting("active_quest_pool_path"))
+		active = pool.new("Active")
+	if completed.get_script().resource_path != QuestSystemSettings.get_config_setting("completed_quest_pool_path", completed.get_script().resource_path):
+		var pool := load(QuestSystemSettings.get_config_setting("completed_quest_pool_path"))
+		completed = pool.new("Completed")
+
 	add_child(available)
 	add_child(active)
 	add_child(completed)
 
+	for pool_path in ProjectSettings.get_setting("quest_system/config/additional_pools", []):
+		var pool_name: String = pool_path.get_file().split(".")[0].to_pascal_case()
+		add_new_pool(pool_path, pool_name)
 
 # Quest API
 
@@ -45,7 +59,7 @@ func complete_quest(quest: Quest) -> Quest:
 	if not active.is_quest_inside(quest):
 		return quest
 
-	if quest.objective_completed == false:
+	if quest.objective_completed == false and QuestSystemSettings.get_config_setting("require_objective_completed"):
 		return quest
 
 	quest.complete()
@@ -226,18 +240,3 @@ func serialize_quests(pool: String) -> Dictionary:
 		quest_dictionary[quests.id] = quest_data
 
 	return quest_dictionary
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
