@@ -1,7 +1,7 @@
 ~ start
 
 Nathan: Hi Coco.
-if apple_status == APPLE_STATUS.HAS:
+if is_quest_active("get_apple") and get_quest_property(1,"apple_count") == get_quest_property(1,"needed_apple"):
 	Coco: I have 5 apples.
 	- Give to Nathan
 		Coco: Here you go.
@@ -11,12 +11,12 @@ if apple_status == APPLE_STATUS.HAS:
 	- Keep it
 		Coco: But they're mine.
 		Nathan: Fair enough.
-elif apple_status == APPLE_STATUS.GAVE:
+elif is_quest_completed("get_apple"):
 	Nathan: Thanks again for the apples.
 else:
 	if is_quest_active("get_apple"):
 		Nathan: How many apples have you found?
-		Coco: {{apple_count}}!
+		Coco: {{get_quest_property(1,"apple_count")}}!
 	else:
 		Nathan: I sure wish I had an apple. Apparently there's an apple tree around here somewhere.
 		Help Nathan?
@@ -30,8 +30,9 @@ else:
 ~ pick_apple
 
 Coco: It's an apple tree.
-if is_quest_active("get_apple") and apple_count < 5:
+if is_quest_active("get_apple") and get_quest_property(1,"apple_count") < get_quest_property(1,"needed_apple"):
 	Coco: I'll just take one.
-	do QuestSystem.call_quest_method(1, "update", [])
-
+	do update_quest("get_apple")
+elif is_quest_active("get_apple") and get_quest_property(1,"apple_count") == get_quest_property(1,"needed_apple"):
+	Coco: I already have enough apples.
 => END

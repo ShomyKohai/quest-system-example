@@ -11,11 +11,10 @@ collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture_filter = 1
-position = Vector2(0, -28)
+position = Vector2(0, -16)
 texture = ExtResource("1_4ve6k")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-visible = false
-position = Vector2(0, -14)
+position = Vector2(0, -10)
 rotation = 1.5708
 shape = SubResource("CapsuleShape2D_fig4y")

@@ -1,23 +1,22 @@
 extends Quest
+class_name GetAppleQuest
 
+@export var needed_apple: int = 5
 
-@export var needed_apple: int = 4
-
+var apple_count: int = 0
 
 func start(_args: Dictionary = {}) -> void:
 	pass
 
 func update(_args: Dictionary = {}) -> void:
-	if State.apple_count < needed_apple:
-		State.apple_count += 1
+	if apple_count < needed_apple:
+		apple_count += 1
 	else:
-		State.apple_count += 1
-		State.apple_status = State.APPLE_STATUS.HAS
+		apple_count += 1
 		# The quest objective will automatically be set to true when calling update
 		objective_completed = true
-
+		
+	updated.emit()
 
 func complete(_args: Dictionary = {}) -> void:
-	if State.apple_status == State.APPLE_STATUS.HAS:
-		State.apple_status = State.APPLE_STATUS.GAVE
-		State.apple_count = 0
+	pass
