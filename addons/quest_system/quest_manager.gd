@@ -37,7 +37,7 @@ func _init() -> void:
 # Quest API
 
 
-func start_quest(quest: Quest) -> Quest:
+func start_quest(quest: Quest, args: Dictionary = {}) -> Quest:
 	assert(quest != null)
 
 	if active.is_quest_inside(quest):
@@ -50,24 +50,41 @@ func start_quest(quest: Quest) -> Quest:
 	active.add_quest(quest)
 	quest_accepted.emit(quest)
 
-	quest.start()
+	quest.start(args)
 
 	return quest
 
 
-func complete_quest(quest: Quest) -> Quest:
+func complete_quest(quest: Quest, args: Dictionary = {}) -> Quest:
 	if not active.is_quest_inside(quest):
 		return quest
 
 	if quest.objective_completed == false and QuestSystemSettings.get_config_setting("require_objective_completed"):
 		return quest
 
-	quest.complete()
+	quest.complete(args)
 
 	active.remove_quest(quest)
 	completed.add_quest(quest)
 
 	quest_completed.emit(quest)
+
+	return quest
+
+
+func update_quest(quest: Quest, args: Dictionary = {}) -> Quest:
+	var pool_with_quest: BaseQuestPool = null
+
+	for pool in get_all_pools():
+		if pool.is_quest_inside(quest):
+			pool_with_quest = pool
+			break
+
+	if pool_with_quest == null:
+		push_warning("Tried calling update on a Quest that is not in any pool.")
+		return quest
+
+	quest.update(args)
 
 	return quest
 
@@ -133,7 +150,7 @@ func set_quest_property(quest_id: int, property: String, value: Variant) -> void
 	var quest: Quest = null
 
 	# Find the quest
-	for pools in get_children():
+	for pools in get_all_pools():
 		if pools.get_quest_from_id(quest_id) != null:
 			quest = pools.get_quest_from_id(quest_id)
 
@@ -157,7 +174,7 @@ func set_quest_property(quest_id: int, property: String, value: Variant) -> void
 	# Finally we set the value
 	quest.set(property, value)
 
-# Manager API
+#region: Manager API
 
 func add_new_pool(pool_path: String, pool_name: String) -> void:
 	var pool = load(pool_path)
@@ -173,6 +190,18 @@ func add_new_pool(pool_path: String, pool_name: String) -> void:
 	add_child(pool_instance)
 
 
+func get_pool(pool: String) -> BaseQuestPool:
+	return get_node_or_null(pool)
+
+
+func get_all_pools() -> Array[BaseQuestPool]:
+	var pools: Array[BaseQuestPool] = []
+	for child in get_children():
+		if child is BaseQuestPool:
+			pools.append(child)
+	return pools
+
+
 func move_quest_to_pool(quest: Quest, old_pool: String, new_pool: String) -> Quest:
 	if old_pool == new_pool: return
 
@@ -181,8 +210,8 @@ func move_quest_to_pool(quest: Quest, old_pool: String, new_pool: String) -> Que
 
 	assert(old_pool_instance != null or new_pool_instance != null)
 
-	old_pool_instance.quests.erase(quest)
-	new_pool_instance.quests.append(quest)
+	old_pool_instance.remove_quest(quest)
+	new_pool_instance.add_quest(quest)
 
 	return quest
 
@@ -201,10 +230,11 @@ func reset_pool(pool_name: String) -> void:
 func quests_as_dict() -> Dictionary:
 	var quest_dict: Dictionary = {}
 
-	for pool in get_children():
+	for pool in get_all_pools():
 		quest_dict[pool.name.to_lower()] = pool.get_ids_from_quests()
 
 	return quest_dict
+
 
 func dict_to_quests(dict: Dictionary, quests: Array[Quest]) -> void:
 	for pool in get_children():
@@ -222,21 +252,38 @@ func dict_to_quests(dict: Dictionary, quests: Array[Quest]) -> void:
 				quests.erase(quest)
 
 
-func serialize_quests(pool: String) -> Dictionary:
-	var pool_node: BaseQuestPool = get_node_or_null(pool)
-
-	if pool_node == null: return {}
+func serialize_quests(pool: String = "") -> Dictionary:
+	var _quests: Array[Quest]
+	if pool.is_empty():
+		for _pool in get_all_pools():
+			_quests.append_array(_pool.get_all_quests())
+	else:
+		var _pool := get_pool(pool)
+		if _pool == null: return {}
+		_quests.append_array(_pool.get_all_quests())
 
 	var quest_dictionary: Dictionary = {}
-	for quests in pool_node.quests:
+	for quest in _quests:
 		var quest_data: Dictionary
-		for name in quests.get_script().get_script_property_list():
-
-			# Filter only defined properties
-			if name.usage & PROPERTY_USAGE_STORAGE or name.usage & PROPERTY_USAGE_SCRIPT_VARIABLE:
-				quest_data[name["name"]] = quests.get(name["name"])
-
-		quest_data.erase("id")
-		quest_dictionary[quests.id] = quest_data
+		quest_data = quest.serialize()
+		quest_dictionary[str(quest.id)] = quest_data
 
 	return quest_dictionary
+
+
+func deserialize_quests(data: Dictionary, pool: String = "") -> Error:
+	var _quests: Array[Quest]
+	if pool.is_empty():
+		for _pool in get_all_pools():
+			_quests.append_array(_pool.get_all_quests())
+	else:
+		var _pool := get_pool(pool)
+		if _pool == null: return ERR_DOES_NOT_EXIST
+		_quests.append_array(_pool.get_all_quests())
+
+	for quest in _quests:
+		quest.deserialize(data.get(str(quest.id), {}))
+
+	return OK
+
+#endregion

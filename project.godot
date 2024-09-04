@@ -20,8 +20,8 @@ config/icon="res://icon.svg"
 
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 State="*res://state.gd"
-QuestSystem="*res://addons/quest_system/quest_manager.gd"
 Shortcuts="*res://shortcuts.gd"
+QuestSystem="*res://addons/quest_system/quest_manager.gd"
 
 [dialogue_manager]
 
