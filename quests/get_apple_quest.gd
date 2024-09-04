@@ -21,4 +21,3 @@ func complete():
 	if State.apple_status == State.APPLE_STATUS.HAS:
 		State.apple_status = State.APPLE_STATUS.GAVE
 		State.apple_count = 0
-

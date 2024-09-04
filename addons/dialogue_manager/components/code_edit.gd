@@ -7,10 +7,11 @@ signal error_clicked(line_number: int)
 signal external_file_requested(path: String, title: String)
 
 
+const DialogueManagerParser = preload("./parser.gd")
 const DialogueSyntaxHighlighter = preload("./code_edit_syntax_highlighter.gd")
 
 
-# A link back to the owner MainView
+# A link back to the owner `MainView`
 var main_view
 
 # Theme overrides for syntax highlighting, etc
@@ -76,6 +77,9 @@ func _gui_input(event: InputEvent) -> void:
 		match shortcut:
 			"toggle_comment":
 				toggle_comment()
+				get_viewport().set_input_as_handled()
+			"delete_line":
+				delete_current_line()
 				get_viewport().set_input_as_handled()
 			"move_up":
 				move_line(-1)
@@ -276,7 +280,7 @@ func insert_bbcode(open_tag: String, close_tag: String = "") -> void:
 
 # Insert text at current caret position
 # Move Caret down 1 line if not => END
-func insert_text(text: String) -> void:
+func insert_text_at_cursor(text: String) -> void:
 	if text != "=> END":
 		insert_text_at_caret(text+"\n")
 		set_caret_line(get_caret_line()+1)
@@ -351,6 +355,19 @@ func toggle_comment() -> void:
 	text_changed.emit()
 
 
+# Remove the current line
+func delete_current_line() -> void:
+	var cursor = get_cursor()
+	if get_line_count() == 1:
+		select_all()
+	elif cursor.y == 0:
+		select(0, 0, 1, 0)
+	else:
+		select(cursor.y - 1, get_line_width(cursor.y - 1), cursor.y, get_line_width(cursor.y))
+	delete_selection()
+	text_changed.emit()
+
+
 # Move the selected lines up or down
 func move_line(offset: int) -> void:
 	offset = clamp(offset, -1, 1)
@@ -366,7 +383,7 @@ func move_line(offset: int) -> void:
 
 	var lines := text.split("\n")
 
-	# We can't move the lines out of bounds
+	# Prevent the lines from being out of bounds
 	if from + offset < 0 or to + offset >= lines.size(): return
 
 	var target_from_index = from - 1 if offset == -1 else to + 1

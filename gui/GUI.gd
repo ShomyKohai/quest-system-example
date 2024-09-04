@@ -25,4 +25,3 @@ func finish_quest(quest: Quest) -> void:
 	print("Completed quest: %s" % quest.quest_name)
 	%CurrentQuest.hide()
 	%Progress.hide()
-
