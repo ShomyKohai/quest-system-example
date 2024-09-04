@@ -4,3 +4,4 @@ Thumbs.db
 
 # Godot 4+ specific ignores
 .godot/
+/.vscode
