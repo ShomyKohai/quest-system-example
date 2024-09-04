@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://dovx8ojro1870"]
+[gd_scene load_steps=26 format=3 uid="uid://dovx8ojro1870"]
 
 [ext_resource type="Texture2D" uid="uid://pvwclvrd4b5s" path="res://characters/coco/coco.png" id="1_poon3"]
 [ext_resource type="Script" path="res://characters/coco/coco.gd" id="1_rc0d5"]
@@ -327,8 +327,6 @@ states/idle/position = Vector2(388, 151)
 states/walk/node = SubResource("AnimationNodeBlendSpace2D_4buhd")
 states/walk/position = Vector2(579, 148)
 
-[sub_resource type="AnimationNodeStateMachinePlayback" id="AnimationNodeStateMachinePlayback_fvhfq"]
-
 [sub_resource type="CircleShape2D" id="CircleShape2D_drwg8"]
 radius = 8.0
 
@@ -357,7 +355,6 @@ libraries = {
 [node name="AnimationTree" type="AnimationTree" parent="."]
 tree_root = SubResource("AnimationNodeStateMachine_0wh44")
 anim_player = NodePath("../AnimationPlayer")
-parameters/playback = SubResource("AnimationNodeStateMachinePlayback_fvhfq")
 parameters/idle/blend_position = Vector2(-0.274455, -0.180258)
 parameters/walk/blend_position = Vector2(0.0229179, 0.729614)
 

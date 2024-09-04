@@ -82,5 +82,5 @@ dialogue_resource = ExtResource("7_j61ni")
 dialogue_start = "pick_apple"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AppleTree/Actionable"]
-position = Vector2(0, -7)
+position = Vector2(0, -15)
 shape = SubResource("CircleShape2D_fgysu")

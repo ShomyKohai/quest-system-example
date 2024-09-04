@@ -18,9 +18,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
-State="*res://state.gd"
 Shortcuts="*res://shortcuts.gd"
+DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
 QuestSystem="*res://addons/quest_system/quest_manager.gd"
 
 [dialogue_manager]
