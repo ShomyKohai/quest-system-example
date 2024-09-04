@@ -4,10 +4,10 @@ extends Quest
 @export var needed_apple: int = 4
 
 
-func start():
+func start(_args: Dictionary = {}) -> void:
 	pass
 
-func update():
+func update(_args: Dictionary = {}) -> void:
 	if State.apple_count < needed_apple:
 		State.apple_count += 1
 	else:
@@ -17,7 +17,7 @@ func update():
 		objective_completed = true
 
 
-func complete():
+func complete(_args: Dictionary = {}) -> void:
 	if State.apple_status == State.APPLE_STATUS.HAS:
 		State.apple_status = State.APPLE_STATUS.GAVE
 		State.apple_count = 0
